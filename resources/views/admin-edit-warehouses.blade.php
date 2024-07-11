@@ -30,6 +30,10 @@
     }
 
     h1 a{
+        color: #fff;
+    }
+
+    h1 a:hover{
         text-decoration: none;
         color: #fff;
     }
@@ -329,8 +333,9 @@
                     </div>
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
-                        <a href="{{ route('admin.warehouses.index' ) }}">Gestão de Armazéns</a>
-                        <a href="{{ route('admin.stock') }}">Stock</a>
+                        <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
+                        <a href="{{ route('admin.manage.project') }}">Projetos</a>
+                        <a href="{{ route('admin.warehouses.index' ) }}" >Gestão de Armazéns</a>
                     </div>
                 </div>
                 <a class="log-out" href="{{ route('login.destroy') }}">LogOut</a>
@@ -345,7 +350,7 @@
         <div>
             <a onclick="javascript:history.go(-1)" class="btn btn-danger">Voltar</a>
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
-                Abastecimento Armazém
+                Distribuição Armazém
             </button>
         </div>
 
@@ -385,7 +390,7 @@
             <tbody>
                 @foreach ($cabinets as $cabinet)
                     <tr>
-                        <td>P{{ $cabinet->id }}</td>
+                        <td>E{{ $cabinet->id }}</td>
                         <td>
                             <a class="edit-button" href="{{ route('admin.cabinets.edit', ['warehouse' => $warehouse->id, 'cabinet' => $cabinet->id]) }}">Editar</a>
                         </td>
@@ -404,7 +409,7 @@
         @endif
     </div>
     <a class="btn" href="{{ route('admin.cabinets.create', ['warehouse' => $warehouse]) }}">
-        Criar Nova Prateleira
+        Criar Nova Estante
     </a>
 
 
@@ -413,7 +418,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Abastecimento</h5>
+                    <h5 class="modal-title" id="exampleModalLongTitle">Distribuição</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -475,7 +480,7 @@
 
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                            <button type="submit" class="btn btn-primary">Salvar Abastecimento</button>
+                            <button type="submit" class="btn btn-primary">Salvar Distribuição</button>
                         </div>
                     </form>
                 </div>

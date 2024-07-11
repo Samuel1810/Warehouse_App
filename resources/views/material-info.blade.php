@@ -146,11 +146,11 @@
     @section('content')
         <div class="container">
             <div class="page-title">
-                <h1><a href="{{ auth()->user()->isAdmin() ? route('admin.page') : route('user.project') }}">Armazém do Minho</a></h1>
+                <h1><a href="{{ auth()->user()->isAdmin() ? route('admin.page') : route('user.material') }}">Armazém do Minho</a></h1>
             </div>
 
-            <div class="button-container">
-                <a href="{{ auth()->user()->isAdmin() ? route('admin.project.material', ['project' => $project->id]) : route('user.project.material', ['project' => $project->id]) }}" class="btn btn-primary">Voltar</a>
+            <div class="text-left">
+                <a href="{{ auth()->user()->isAdmin() ? route('admin.material.project', ['materialId' => $material->id]) : route('user.material.project', ['materialId' => $material->id]) }}" class="btn btn-danger">Voltar</a>
             </div>
             
             <div class="material-details">
@@ -167,45 +167,42 @@
                     <strong>Ficha Técnica:</strong>
                     <img src="data:image/png;base64,{{ base64_encode($material->ficha_tecnica) }}" alt="Ficha Técnica">
                 </p>
+                <p><strong>Pertence ao: </strong>Projeto {{ $project->id }}</p>
+                <p><strong>Armazém: </strong>A{{ $materialProject->warehouse_id }}</p>
+                <p><strong>Estante: </strong>E{{ $materialProject->cabinet_id }}</p>
                 <div class="separation"></div>
-                <p><strong>Quantidade disponível em estoque:</strong> {{ $material->quantidade }} kg</p>
+                <p><strong>Quantidade:</strong> {{ $material->quantidade }} kg</p>
             </div>
 
             <div class="separation"></div>
 
-            <form method="POST" action="{{ route('acquired.material', ['project' => $project->id, 'material' => $material->id]) }}">
+            <form method="POST" action="{{ route('acquire.material', ['projectId' => $project->id, 'materialId' => $material->id, 'warehouseId' => $materialProject->warehouse_id, 'cabinetId' => $materialProject->cabinet_id]) }}">
             @csrf
+                <input type="hidden" name="materialQuantity" value="{{ $material->quantidade }}">
                 <div class="quantity-form">
                     <h2>Quantidade Desejada (em kg):</h2>
-                    <input type="number" name="quantidade_desejada" id="quantidade_desejada" min="0" step="0.1">
+                    <input type="number" name="quantidade_desejada" id="quantidade_desejada" min="0.1" step="0.1" required>
                     <button type="submit" class="acquire-button">Adquirir</button>
-
-                    @if(session('empty_string_error'))
-                        <p class="message error-message">{{ session('empty_string_error') }}</p>
-                    @endif
 
                         @if (session('success_message'))
                             <p class="message success-message">{{ session('success_message') }}</p>
                         @endif
 
+                        @if (session('error_message'))
+                            <p class="message error-message">{{ session('error_message') }}</p>
+                        @endif
 
-                    @if (session('error_message'))
-                        <p class="message error-message">{{ session('error_message') }}</p>
-                    @endif
                 </div>
             </form>
 
             @if ($material->quantidade > 0)
-                <form method="POST" action="{{ route('material.return', ['material' => $material->id]) }}">
+                <form method="POST" action="{{ route('material.return', ['projectId' => $project->id, 'materialId' => $material->id, 'warehouseId' => $materialProject->warehouse_id, 'cabinetId' => $materialProject->cabinet_id]) }}">
                 @csrf
+                    <input type="hidden" name="materialQuantity" value="{{ $material->quantidade }}">
                     <div class="quantity-form">
                         <h2>Quantidade a Devolver (em kg):</h2>
-                        <input type="number" name="quantidade_devolucao" id="quantidade_devolucao" min="0" step="0.1">
+                        <input type="number" name="quantidade_devolucao" id="quantidade_devolucao" min="0.1" step="0.1" required>
                         <button type="submit" class="acquire-button">Devolver</button>
-
-                        @if(session('empty_string_error1'))
-                            <p class="message error-message">{{ session('empty_string_error1') }}</p>
-                        @endif
 
                         @if (session('success_message1'))
                             <p class="message success-message">{{ session('success_message1') }}</p>
@@ -214,6 +211,7 @@
                         @if (session('error_message1'))
                             <p class="message error-message">{{ session('error_message1') }}</p>
                         @endif
+
                     </div>
                 </form>
             @endif

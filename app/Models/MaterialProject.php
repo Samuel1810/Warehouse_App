@@ -4,9 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class MaterialProjects extends Model
+class MaterialProject extends Model
 {
     protected $fillable = [
+        'id',
         'material_id',
         'project_id'
     ];
@@ -15,11 +16,11 @@ class MaterialProjects extends Model
 
     public function materials()
     {
-        return $this->hasMany(Material::class);
+        return $this->belongsTo(Material::class, 'material_id');
     }
 
     public function projects()
     {
-        return $this->hasMany(Project::class);
+        return $this->belongsTo(Project::class, 'project_id');
     }
 }

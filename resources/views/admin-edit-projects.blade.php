@@ -30,6 +30,10 @@
     }
 
     h1 a{
+        color: #fff;
+    }
+
+    h1 a:hover{
         text-decoration: none;
         color: #fff;
     }
@@ -329,8 +333,9 @@
                     </div>
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
-                        <a href="{{ route('admin.warehouses.index' ) }}">Gestão de Armazéns</a>
-                        <a href="{{ route('admin.stock') }}">Stock</a>
+                        <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
+                        <a href="{{ route('admin.manage.project') }}">Projetos</a>
+                        <a href="{{ route('admin.warehouses.index' ) }}" >Gestão de Armazéns</a>
                     </div>
                 </div>
                 <a class="log-out" href="{{ route('login.destroy') }}">LogOut</a>
@@ -339,11 +344,11 @@
     </div>
     <div class="container">
         <div class="page-title">
-            <h1>Detalhes do Armazém</h1>
+            <h1>Detalhes do Projeto</h1>
         </div>
 
         <div class="text-left">
-            <a onclick="javascript:history.go(-1)" class="btn btn-danger">Voltar</a>
+            <a href="{{ route('admin.manage.project') }}" class="btn btn-danger">Voltar</a>
         </div>
 
         <div class="warehouse-title">
@@ -364,7 +369,7 @@
                     <strong>
                         Responsável pelo projeto:
                     </strong>
-                    Samuel Costa.
+                    {{ $project->owner->name }} .
                 </p>
                 <p>
                     <strong>
@@ -383,8 +388,8 @@
                     <strong>
                         Materiais utilizados:
                     </strong>
-                    @foreach ($projectParticipants as $participant)
-                        {{ $participant->users->name }}
+                    @foreach ($projectMaterials as $material)
+                        {{ $material->materials->nome }}
                         @if (!$loop->last)
                             {{ ', ' }}
                         @else
@@ -395,7 +400,7 @@
 
                 <div class="text-center">
                     <button type="button" class="btn btn-info" data-toggle="modal" data-target="#proprietaryEditModal">
-                        Editar Proprietário
+                        Editar Responsável
                     </button>
 
                     <button type="button" class="btn btn-info" data-toggle="modal" data-target="#memberEditModal">
@@ -409,9 +414,27 @@
         </div>
 
 
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+    @if (session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @endif
+
+
+
+
     <!-- Modal 1 -->
     <div class="modal fade" id="proprietaryEditModal" tabindex="-1" role="dialog" aria-labelledby="proprietaryEditModal" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLongTitle">Editar Proprietário do Projeto {{ $project->id }}</h5>
@@ -420,27 +443,37 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form class="form-inline" method="post" action="{{ route('admin.warehouses.stockmovement') }}">
-                        @csrf
-
-                        <div class="form-group mx-sm-3 mb-2">
-                            <label for="inputPassword2">Alterar proprietário:</label>
-                            <input type="text" class="form-control" id="inputPassword2" placeholder="Prateleira">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-10 offset-md-1">
+                                <h5>Atual proprietário:</h5>
+                                <input type="text" value="{{ $project->owner->name }}" class="form-control mb-3" readonly>
+                                <h5>Selecione um novo proprietário:</h5>
+                                <form method="post" action="{{ route('project.owner.update') }}">
+                                    @csrf
+                                    <input type="hidden" name="project_id" id="modalProjectId" value="{{ $project->id }}"> 
+                                    <select class="form-control" id="project_owner" name="project_owner">
+                                        <option selected value="">Selecione um utilizador</option>
+                                        @foreach ($nonOwnerUsers as $nonOwnerUser)
+                                            <option value="{{ $nonOwnerUser->id }}">{{ $nonOwnerUser->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                            <button type="submit" class="btn btn-primary">Salvar</button>
-                        </div>
-                    </form>
-                </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                        <button type="submit" class="btn btn-primary">Salvar</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 
     <!-- Modal 2 -->
     <div class="modal fade" id="memberEditModal" tabindex="-1" role="dialog" aria-labelledby="memberEditModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLongTitle">Editar Membros do Projeto {{ $project->id }}</h5>
@@ -449,24 +482,47 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form class="form-inline" method="post" action="{{ route('admin.warehouses.stockmovement') }}">
-                        @csrf
-
-                        <div class="form-group mx-sm-3 mb-2">
-                            <label for="inputPassword2">Adicionar membro:</label>
-                                <select class="form-select form-select-lg mb-3" id="material" name="material" aria-label=".form-select-lg example">
-                                    <option selected value="">Selecione um Utilizador</option>
-                                    @foreach ($usersNotInProject as $user)
-                                        <option value="{{ $user->id }}">{{ $user->name }}</option>
-                                    @endforeach
-                                </select>
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-10 offset-md-1">
+                                <h5>Membros Associados</h5>
+                                <ul class="list-group">
+                                    @if ($projectParticipants->count() > 0)
+                                        @foreach ($projectParticipants as $participant)
+                                            <li class="list-group-item">
+                                                {{ $participant->users->name }}
+                                                <a href="{{ route('project.remove.member', ['projectId' => $project->id, 'userId' => $participant->users->id]) }}" class="btn btn-sm btn-danger float-right" onclick="return confirm('Tem certeza que deseja remover este membro?')">Remover</a>
+                                            </li>
+                                        @endforeach
+                                    @else
+                                        <li class="list-group-item alert-danger">
+                                            Não há membros associados
+                                        </li>
+                                    @endif
+                                </ul>
+                            </div>
                         </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        <div class="row mt-4">
+                            <div class="col-md-10 offset-md-1">
+                                <h5>Adicionar Membro</h5>
+                                <form method="post" action="{{ route('project.add.member', ['projectId' => $project->id]) }}">
+                                    @csrf
+                                    <div class="form-group">
+                                        <select class="form-control" id="project_member" name="project_member">
+                                            <option selected value="">Selecione um utilizador</option>
+                                            @foreach ($nonMemberUsers as $nonMemberUser)
+                                                <option value="{{ $nonMemberUser->id }}">{{ $nonMemberUser->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                                </form>
+                            </div>
                         </div>
-                    </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -474,7 +530,7 @@
 
     <!-- Modal 3 -->
     <div class="modal fade" id="materialEditModal" tabindex="-1" role="dialog" aria-labelledby="materialEditModalTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLongTitle">Editar Materiais do Projeto {{ $project->id }}</h5>
@@ -483,21 +539,50 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <form class="form-inline" method="post" action="{{ route('admin.warehouses.stockmovement') }}">
-                        @csrf
-
-                        <div class="form-group mx-sm-3 mb-2">
-                            <label for="inputPassword2">Adicionar material:</label>
-                            <input type="text" class="form-control" id="inputPassword2" placeholder="Prateleira">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-10 offset-md-1">
+                                <h5>Materiais Associados</h5>
+                                <ul class="list-group">
+                                    @if ($projectMaterials->count() > 0)
+                                        @foreach ($projectMaterials as $material)
+                                            <li class="list-group-item">
+                                                {{ $material->materials->nome }}
+                                                <a href="{{ route('project.remove.material', ['projectId' => $project->id, 'materialId' => $material->materials->id]) }}" class="btn btn-sm btn-danger float-right" onclick="return confirm('Tem certeza que deseja remover este material?')">Remover</a>
+                                            </li>
+                                        @endforeach
+                                    @else
+                                        <li class="list-group-item alert-danger">
+                                            Não há materiais associados
+                                        </li>
+                                    @endif
+                                </ul>
+                            </div>
                         </div>
-
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        <div class="row mt-4">
+                            <div class="col-md-10 offset-md-1">
+                                <h5>Adicionar Material</h5>
+                                <form method="post" action="{{ route('project.add.material', ['projectId' => $project->id]) }}">
+                                    @csrf
+                                    <div class="form-group">
+                                        <select class="form-control" id="project_material" name="project_material">
+                                            <option selected value="">Selecione um material</option>
+                                            @foreach ($materialsNonAssociate as $material)
+                                                <option value="{{ $material->id }}">{{ $material->nome }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Adicionar</button>
+                                </form>
+                            </div>
                         </div>
-                    </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
                 </div>
             </div>
         </div>
     </div>
+
 </body>

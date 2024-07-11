@@ -161,7 +161,7 @@
 <body>
     @section('content')
     <div class="header">
-        <h1><a href="{{ route('user.project') }}">Armazém do Minho</a></h1>
+        <h1><a href="{{ route('user.material') }}">Armazém do Minho</a></h1>
         <div class="user-info">
             @if (auth()->check())
                 <div class="user-dropdown">
@@ -179,7 +179,7 @@
     </div>
     <div class="container">
         <div class="page-title">
-            <h1>Materiais - Projeto {{ $project->id }}</h1>
+            <h1>Materiais</h1>
         </div>
 
         <div class="user-table">
@@ -188,20 +188,18 @@
                 <thead>
                     <tr>
                         <th>Nome</th>
-                        <th>Quantidade (KG)</th>
-                        <th>Solicitar Aquisição</th>
+                        <th>Ver Detalhes</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($materialProjects as $materialProject)
+                    @foreach ($materials as $material)
                         <tr class="items">
-                            <td>{{ $materialProject->nome }}</td>
-                            <td>{{ $materialProject->quantidade }}</td>
-                            <td><a href="{{ route('material.acquisition', ['project' => $project->id, 'material' => $materialProject->id]) }}">Solicitar</a></td>
+                            <td>{{ $material->nome }}</td>
+                            <td><a href=" {{ route('user.material.project', ['materialId' => $material->id]) }} ">Ver</a></td>
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table> 
         </div>
     </div>
     @endsection

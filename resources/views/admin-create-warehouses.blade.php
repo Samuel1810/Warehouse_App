@@ -258,8 +258,8 @@
             <div class="page-title">
                 <h1>Criar Novo Armazém</h1>
             </div>
-            <div>
-                <a onclick="history.back(-1)" class="back-button">Voltar</a>
+            <div class="text-left">
+                <a onclick="history.back(-1)" class="btn btn-danger">Voltar</a>
             </div>
 
             <form action="{{ route('admin.warehouses.store') }}" method="POST" enctype="multipart/form-data">

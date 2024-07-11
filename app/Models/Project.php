@@ -14,14 +14,18 @@ class Project extends Model
         'material_id',
     ];
 
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
     public function users()
     {
         return $this->belongsToMany(User::class, 'user_projects');
     }
-
     public function materials()
     {
-        return $this->belongsToMany(Material::class, 'materials_projects');
+        return $this->hasMany(Material::class, 'materials_projects');
     }
 
     public function purchaseMaterials()

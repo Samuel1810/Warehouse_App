@@ -16,6 +16,10 @@
     }
 
     h1 a{
+        color: #fff;
+    }
+
+    h1 a:hover{
         text-decoration: none;
         color: #fff;
     }
@@ -215,8 +219,9 @@
                     </div>
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
-                        <a href="{{ route('admin.warehouses.index' ) }}">Gestão de Armazéns</a>
-                        <a href="{{ route('admin.stock') }}">Stock</a>
+                        <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
+                        <a href="{{ route('admin.manage.project') }}">Projetos</a>
+                        <a href="{{ route('admin.warehouses.index' ) }}" >Gestão de Armazéns</a>
                     </div>
                 </div>
                 <a class="log-out" href="{{ route('login.destroy') }}">LogOut</a>
@@ -242,9 +247,9 @@
                     @foreach ($warehouses as $warehouse)
                         <tr class="items">
                             <td>A{{ $warehouse->id }}</td>
-                            <td><a class="edit" href="{{ route('admin.warehouses.edit',$warehouse->id) }}">Editar</a>
+                            <td><a class="edit" href="{{ route('admin.warehouses.edit', $warehouse->id) }}">Editar</a>
                             </td>
-                            <td><a class="edit" href="{{ route('admin.warehouses.remove',$warehouse->id) }}">Remover</a>
+                            <td><a class="edit" onclick="return confirm('Tem certeza que deseja remover este armazém?')" href="{{ route('admin.warehouses.remove', $warehouse->id) }}">Remover</a>
                             </td>
                         </tr>
                     @endforeach

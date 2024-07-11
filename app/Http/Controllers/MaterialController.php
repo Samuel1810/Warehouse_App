@@ -11,6 +11,7 @@ use App\Models\UserMaterial;
 use App\Models\UserProject;
 use App\Models\WarehouseStockMovement;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\PurchaseMaterial;
 use App\Models\Movement;
@@ -29,163 +30,242 @@ class MaterialController extends Controller
     {
         return view('purchased_materials', [
             'material' => $material,
-        ]); 
-    }
-
-    public function index(Request $request)
-    {
-        $user = auth()->user()->id;
-        $userProjects = UserProject::where('user_id', $user)
-            ->get();
-
-        $ownerProjects = Project::where('owner_id', $user)
-            ->get();
-
-        if(auth()->user()->id === 1) {
-            return view('admin-projects', compact('userProjects', 'ownerProjects'));
-        } else {
-            return view('user-projects', compact('userProjects', 'ownerProjects'));
-        }
+        ]);
     }
                     
-    public function materialProjects($projectId){
-        $project = Project::findOrFail($projectId);
-        $materialProjects = $project->materials;
+    public function showAllMaterials(){
+        $materials = Material::all();
 
-        // $qtdMaterial = WarehouseStockMovement::where('project_id', $project)->where('material_id', $request->input('material'));
 
         if(auth()->user()->id === 1){
-            return view('admin-materials', compact('project', 'materialProjects'));
+            return view('admin-materials', compact('materials'));
         } else {
-            return view('user-materials', compact('project', 'materialProjects'));
+            return view('user-materials', compact('materials'));
         }
     }
 
-    public function acquired(Request $request, $project, $material) {
-        $material = Material::find($material);
-    
-        if (!$material) {
-            return redirect()->route('material.acquisition', ['project' => $project, 'material' => $material->id])->with('error_message', 'Material não encontrado.');
-        }
-    
-        $quantidadeDesejada = request('quantidade_desejada');
-    
-        if ($quantidadeDesejada == '' || $quantidadeDesejada == '0') {
-            return redirect()->route('material.acquisition', ['project' => $project, 'material' => $material->id])->with('empty_string_error', 'Insira um valor válido!');
-        }
-    
-        $request->validate([
-            'quantidade_desejada' => 'required|numeric|min:0.1',
-        ]);
-        
-        if($quantidadeDesejada <= $material->quantidade){
-            $currentDatetime = now();
+    public function search(Request $request){
+        $materials = Material::where('nome', 'LIKE', '%'.$request['search'].'%')
+            ->get();
 
-            try {
-                \DB::beginTransaction();
-
-                $material->quantidade -= $quantidadeDesejada;
-                $material->save();
-
-                Movement::create([
-                    'user_id' => auth()->user()->id,
-                    'material_id' => $material->id,
-                    'quantidade' => $quantidadeDesejada,
-                    'data_movimento' => $currentDatetime,
-                    'tipo_movimento' => 1, // aquisição
-                ]);
-
-                \DB::commit();
-
-                // Verifica se há um usuário autenticado
-                $user = auth()->user();
-
-                // Mail::to('samuel18timao@gmail.com')->send(new MaterialAcquisition($material, $quantidadeDesejada, 'Aquisição', now(), auth()->user()));
-
-                // Mail::to($user->email)->send(new MaterialAcquisition($material, $quantidadeDesejada, 'Aquisição', now(), auth()->user()));
-
-                return redirect()->route('material.acquisition', ['project' => $project, 'material' => $material->id])->with('success_message', 'Solicitação enviada com sucesso!');
-            } catch (\Exception $e) {
-                \DB::rollBack();
-                \Log::error($e);
-        
-                return redirect()->route('material.acquisition', ['project' => $project, 'material' => $material->id])->with('error_message', 'Erro ao enviar solicitação.');
-            }
-        }
-
+        return view('admin-materials', compact('materials'));
     }
 
-    public function returnMaterial(Request $request, $material) {
-        $material = Material::find($material);
+    public function showMaterialProjects($materialId){
+        $material = Material::findOrFail($materialId);
 
-        if (!$material) {
-            return redirect()->route('material.acquisition')->with('error_message1', 'Material não encontrado.');
+        $materialsProjects = DB::table('warehouse_stock_movements')
+            ->select([
+                'material_id',
+                'project_id',
+                'warehouse_id',
+                'cabinet_id',
+                DB::raw('COUNT(*) as id'),
+                DB::raw('SUM(quantity) as quantidadeInicial')
+            ])
+            ->groupBy(['material_id', 'project_id', 'warehouse_id', 'cabinet_id'])
+                ->where('material_id', $materialId)
+                    ->get();
+
+                foreach ($materialsProjects as $project) {
+                    $requisitionQuantity = DB::table('movements')
+                        ->where('material_id', $project->material_id)
+                            ->where('project_id', $project->project_id)
+                                ->where('warehouse_id', $project->warehouse_id)
+                                    ->where('cabinet_id', $project->cabinet_id)
+                                        ->where('tipo_movimento', 1) // 1 para requisição
+                                            ->sum('quantidade');
+            
+                    $devolutionQuantity = DB::table('movements')
+                        ->where('material_id', $project->material_id)
+                            ->where('project_id', $project->project_id)
+                                ->where('warehouse_id', $project->warehouse_id)
+                                    ->where('cabinet_id', $project->cabinet_id)
+                                        ->where('tipo_movimento', 0) // 0 para devolução
+                                            ->sum('quantidade');
+
+                    $project->quantidade = $project->quantidadeInicial - $requisitionQuantity + $devolutionQuantity;
+                }
+                                
+        if(auth()->user()->id === 1) {
+            return view('admin-material-projects', compact('materialsProjects', 'material'));
+        } else {
+            return view('user-material-projects', compact('materialsProjects', 'material'));
         }
+    }
 
-        $quantidadeDevolucao = request('quantidade_devolucao');
+    public function showMaterial($projectId, $materialId, $warehouseId, $cabinetId){
+        $project = Project::findOrFail($projectId);
+        $material = Material::findOrFail($materialId);
 
-        if ($quantidadeDevolucao == '' || $quantidadeDevolucao == '0') {
-            return redirect()->route('material.acquisition', ['material' => $material->id])->with('empty_string_error1', 'Insira um valor válido!');
-        }
+        $quantity = DB::table('warehouse_stock_movements')
+        ->where('material_id', $materialId)
+            ->where('project_id', $projectId)
+                ->where('warehouse_id', $warehouseId)
+                    ->where('cabinet_id', $cabinetId)
+                        ->sum('quantity');
+        
+        $requisitionQuantity = DB::table('movements')
+            ->where('material_id', $materialId)
+                ->where('project_id', $projectId)
+                    ->where('warehouse_id', $warehouseId)
+                        ->where('cabinet_id', $cabinetId)
+                            ->where('tipo_movimento', 1)
+                                ->sum('quantidade');
 
+        $devolutionQuantity = DB::table('movements')
+            ->where('material_id', $materialId)
+                ->where('project_id', $projectId)
+                    ->where('warehouse_id', $warehouseId)
+                        ->where('cabinet_id', $cabinetId)
+                            ->where('tipo_movimento', 0)
+                                ->sum('quantidade');
+
+        $material->quantidade = $quantity - $requisitionQuantity + $devolutionQuantity;
+
+        $materialProject = WarehouseStockMovement::where('material_id', $materialId)
+            ->where('project_id', $projectId)
+                ->where('warehouse_id', $warehouseId)
+                    ->where('cabinet_id', $cabinetId)
+                        ->firstOrFail();
+
+        return view('material-info', compact('project', 'material', 'materialProject'));
+    }
+
+    public function acquire(Request $request, $projectId, $materialId, $warehouseId, $cabinetId) {
         $request->validate([
-            'quantidade_devolucao' => 'required|numeric|min:0.1',
+            'materialQuantity' => 'required|integer|min:1',
+            'quantidade_desejada' => 'required|integer|min:1',
         ]);
 
-        $currentDatetime = now();
+        $material = Material::find($materialId);
+        $matQtd = $request->input('materialQuantity');
+        $quantidadeDesejada = $request->input('quantidade_desejada');
+    
+        if ($quantidadeDesejada > $matQtd) {
+            return redirect()->route('material.show', [
+                'projectId' => $projectId,
+                'materialId' => $material->id,
+                'warehouseId' => $warehouseId,
+                'cabinetId' => $cabinetId
+            ])->with('error_message', 'Valor de requisição ultrapassa o valor existente!');
+        }
+
+        DB::beginTransaction();
 
         try {
-            // Iniciar uma transação para garantir consistência do banco de dados
-            \DB::beginTransaction();
-
-            // Atualize a quantidade disponível do material
-            $material->quantidade += $quantidadeDevolucao;
-            $material->save();
-
-            // Crie um novo registro de movimento para a devolução
             Movement::create([
                 'user_id' => auth()->user()->id,
                 'material_id' => $material->id,
+                'project_id' => $projectId,
+                'warehouse_id' => $warehouseId,
+                'cabinet_id' => $cabinetId,
+                'quantidade' => $quantidadeDesejada,
+                'data_movimento' => now(),
+                'tipo_movimento' => 1, // requisição
+            ]);
+
+            $material->quantidade -= $quantidadeDesejada;
+            $material->save();
+
+            DB::commit();
+
+            // Mail::to('samuel18timao@gmail.com')->send(new MaterialAcquisition($material, $quantidadeDesejada, 'Aquisição', now(), auth()->user()));
+
+            // Mail::to($user->email)->send(new MaterialAcquisition($material, $quantidadeDesejada, 'Aquisição', now(), auth()->user()));
+
+            return redirect()->route('material.show', [
+                'projectId' => $projectId,
+                'materialId' => $material->id,
+                'warehouseId' => $warehouseId,
+                'cabinetId' => $cabinetId
+            ])->with('success_message', 'Aquisição realizada com sucesso!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erro ao enviar solicitação: ' . $e->getMessage(), [
+                'projectId' => $projectId,
+                'materialId' => $material->id,
+                'warehouseId' => $warehouseId,
+                'cabinetId' => $cabinetId,
+                'exception' => $e,
+            ]);
+            return redirect()->route('material.show', [
+                'projectId' => $projectId,
+                'materialId' => $material->id,
+                'warehouseId' => $warehouseId,
+                'cabinetId' => $cabinetId
+            ])->with('error_message', 'Erro ao realizar aquisição.');
+        }
+    }
+
+    public function return(Request $request, $projectId, $materialId, $warehouseId, $cabinetId) {
+        $request->validate([
+            'materialQuantity' => 'required|integer|min:1',
+            'quantidade_devolucao' => 'required|integer|min:1',
+        ]);
+
+        $material = Material::find($materialId);
+        $matQtd = $request->input('materialQuantity');
+        $quantidadeDevolucao = $request->input('quantidade_devolucao');
+
+        if ($quantidadeDevolucao > $matQtd) {
+            return redirect()->route('material.show', [
+                'projectId' => $projectId,
+                'materialId' => $material->id,
+                'warehouseId' => $warehouseId,
+                'cabinetId' => $cabinetId
+            ])->with('error_message1', 'Valor de devolução ultrapassa o valor existente!');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            Movement::create([
+                'user_id' => auth()->user()->id,
+                'material_id' => $material->id,
+                'project_id' => $projectId,
+                'warehouse_id' => $warehouseId,
+                'cabinet_id' => $cabinetId,
                 'quantidade' => $quantidadeDevolucao,
-                'data_movimento' => $currentDatetime,
+                'data_movimento' => now(),
                 'tipo_movimento' => 0, // 0 para devolução
             ]);
 
-            // Verificar se o usuário possui um registro na tabela user_materials para esse material
-            $userMaterial = auth()->user()->materials()->find($material->id);
-            $quantidadeEmPosse = $userMaterial->pivot->quantidade;
+            $material->quantidade += $quantidadeDevolucao;
+            $material->save();
 
-            if ($quantidadeDevolucao > $quantidadeEmPosse) {
-                return redirect()->route('material.acquisition', ['material' => $material->id])->with('error_message1', 'Quantidade de devolução maior que a de posse.');
-            }
+            DB::commit();
 
-            // Se existir, atualizar a quantidade
-            if ($userMaterial) {
-                $userMaterial->pivot->quantidade -= $quantidadeDevolucao;
-                $userMaterial->pivot->save();
-            }
+            // Mail::to('samuel18timao@gmail.com')->send(new MaterialDevolution($material, $quantidadeDevolucao, 'Devolução', now(), auth()->user()));
 
-            // Confirme a transação, salvando todas as alterações no banco de dados
-            \DB::commit();
+            // $material->owners->each(function ($owner) use ($material, $quantidadeDevolucao) {
+            //     Mail::to($owner->email)->send(new MaterialDevolution($material, $quantidadeDevolucao, 'Devolução', now(), auth()->user()));
+            // });
 
-            // Verifica se há um usuário autenticado
-            $user = auth()->user();
+            // Mail::to($user->email)->send(new MaterialDevolution($material, $quantidadeDevolucao, 'Devolução', now(), auth()->user()));
 
-            Mail::to('samuel18timao@gmail.com')->send(new MaterialDevolution($material, $quantidadeDevolucao, 'Devolução', now(), auth()->user()));
-
-            $material->owners->each(function ($owner) use ($material, $quantidadeDevolucao) {
-                Mail::to($owner->email)->send(new MaterialDevolution($material, $quantidadeDevolucao, 'Devolução', now(), auth()->user()));
-            });
-
-            Mail::to($user->email)->send(new MaterialDevolution($material, $quantidadeDevolucao, 'Devolução', now(), auth()->user()));
-
-            return redirect()->route('material.acquisition', ['material' => $material->id])->with('success_message1', 'Devolução realizada com sucesso!');
+            return redirect()->route('material.show', [
+                'projectId' => $projectId,
+                'materialId' => $material->id,
+                'warehouseId' => $warehouseId,
+                'cabinetId' => $cabinetId
+            ])->with('success_message1', 'Devolução realizada com sucesso!');
         } catch (\Exception $e) {
-            // Em caso de erro, reverta todas as alterações no banco de dados
-            \DB::rollBack();
-
-            return redirect()->route('material.acquisition', ['material' => $material->id])->with('error_message1', 'Erro ao realizar a devolução do material.');
-        }   
+            DB::rollBack();
+            Log::error('Erro ao enviar solicitação: ' . $e->getMessage(), [
+                'projectId' => $projectId,
+                'materialId' => $material->id,
+                'warehouseId' => $warehouseId,
+                'cabinetId' => $cabinetId,
+                'exception' => $e,
+            ]);
+            return redirect()->route('material.show', [
+                'projectId' => $projectId,
+                'materialId' => $material->id,
+                'warehouseId' => $warehouseId,
+                'cabinetId' => $cabinetId
+            ])->with('error_message1', 'Erro ao realizar devolução.');
+        }
     }
 
     public function stock(){
@@ -356,12 +436,5 @@ class MaterialController extends Controller
         $motivo = $request->input('motivo');
 
         return 'funcionou';
-    }
-
-    public function purchases($project, $material){
-        $project = Project::findOrFail($project);
-        $material = Material::find($material);
-
-        return view('material-acquisition',compact('material', 'project'));
     }
 }

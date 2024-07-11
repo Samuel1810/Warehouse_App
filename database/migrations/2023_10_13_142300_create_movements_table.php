@@ -15,6 +15,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('material_id');
+            $table->unsignedBigInteger('project_id');
+            $table->unsignedBigInteger('warehouse_id');
+            $table->unsignedBigInteger('cabinet_id');
             $table->timestamp('data_movimento')->useCurrent();
             $table->tinyInteger('tipo_movimento');
             $table->float('quantidade');
@@ -22,6 +25,9 @@ return new class extends Migration
 
             $table->foreign('user_id')->references('id')->on('users');
             $table->foreign('material_id')->references('id')->on('materials');
+            $table->foreign('project_id')->references('id')->on('projects');
+            $table->foreign('warehouse_id')->references('id')->on('warehouses');
+            $table->foreign('cabinet_id')->references('id')->on('cabinets');
         });
     }
 

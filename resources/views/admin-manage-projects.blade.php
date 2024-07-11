@@ -16,6 +16,10 @@
     }
 
     h1 a{
+        color: #fff;
+    }
+
+    h1 a:hover{
         text-decoration: none;
         color: #fff;
     }
@@ -215,7 +219,7 @@
                     </div>
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
-                        <a href="{{ route('admin.stock') }}">Stock</a>
+                        <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
                         <a href="{{ route('admin.manage.project') }}">Projetos</a>
                         <a href="{{ route('admin.warehouses.index' ) }}" >Gestão de Armazéns</a>
                     </div>
@@ -236,7 +240,8 @@
                     <tr>
                         <th>Número do Projeto</th>
                         <th>Descrição</th>
-                        <th>Editar Projeto</th>
+                        <th>Editar</th>
+                        <th>Remover</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -247,6 +252,8 @@
                             <td>
                                 <a class="edit-button" href="{{ route('admin.edit.project', ['projectId' => $project->id]) }}">Editar</a>
                             </td>
+                            <td>
+                                <a  class="edit-button" href="{{ route('admin.remove.project', ['projectId' => $project->id]) }}" onclick="return confirm('Tem certeza que deseja remover este projeto?')">Remover</a>
                             </td>
                         </tr>
                     @endforeach
@@ -255,8 +262,46 @@
         </div>
     </div>
 
+    <a class="btn btn-info" data-toggle="modal" data-target="#createProjModal">
+        Criar Novo Projeto
+    </a>
+
     @if (session('success_message'))
         <p class="message success-message">{{ session('success_message') }}</p>
     @endif
 </body>
+
+<!-- Modal 1 -->
+<div class="modal fade" id="createProjModal" tabindex="-1" role="dialog" aria-labelledby="createProjModal" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLongTitle">Criar um novo projeto</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="container-fluid">
+                        <div class="row">
+                            <div class="col-md-10 offset-md-1">
+                                <h5>Criar Projeto:</h5>
+                                    <form action="{{ route('admin.store.project') }}" method="post">
+                                    @csrf
+                                    <div class="form-group">
+                                        <label for="description">Descrição</label>
+                                        <textarea class="form-control" id="description" name="description" required></textarea>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Salvar</button>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </html>

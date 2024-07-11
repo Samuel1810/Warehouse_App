@@ -31,6 +31,11 @@ class User extends Authenticatable
         return $this->hasMany(PurchaseMaterial::class, 'utilizador_id');
     }
 
+    public function ownedProjects()
+    {
+        return $this->hasMany(Project::class, 'owner_id');
+    }
+
     public function projects()
     {
         return $this->belongsToMany(Project::class, 'user_projects');

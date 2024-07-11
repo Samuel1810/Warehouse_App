@@ -17,6 +17,10 @@
     }
 
     h1 a{
+        color: #fff;
+    }
+
+    h1 a:hover{
         text-decoration: none;
         color: #fff;
     }
@@ -248,8 +252,9 @@
                     </div>
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
-                        <a href="{{ route('admin.warehouses.index' ) }}">Gestão de Armazéns</a>
-                        <a href="{{ route('admin.stock') }}">Stock</a>
+                        <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
+                        <a href="{{ route('admin.manage.project') }}">Projetos</a>
+                        <a href="{{ route('admin.warehouses.index' ) }}" >Gestão de Armazéns</a>
                     </div>
                 </div>
                 <a class="log-out" href="{{ route('login.destroy') }}">LogOut</a>
@@ -258,29 +263,38 @@
     </div>
     <div class="container">
         <div class="page-title">
-            <h1>Materiais - Projeto {{ $project->id }}</h1>
+            <h1>Materiais</h1>
         </div>
 
         <div class="button-container">
-            <a href=" {{ route('admin.project') }} " class="btn btn-primary">Gestão de Utilizadores</a>
+            <a href="{{ route('admin.page') }}" class="btn btn-primary">Gestão de Utilizadores</a>
         </div>
 
+        <div class="input-group d-flex justify-content-center mb-4">
+            <form action="{{ route('dashboard') }}" method="GET">
+                <input name="search" type="text" class="form-control" placeholder="Pesquisar..."/>
+                <button class="btn btn-info" >
+                    Pesquisar
+                </button>
+                <button href="{{ route('admin.material') }}" class="btn btn-secondary">
+                    Limpar
+                </button>
+            </form>
+        </div>
 
         <div class="user-table">
             <table>
                 <thead>
                     <tr>
                         <th>Nome</th>
-                        <th>Quantidade Stock (KG)</th>
-                        <th>Solicitar Aquisição</th>
+                        <th>Ver Detalhes</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($materialProjects as $materialProject)
+                    @foreach ($materials as $material)
                         <tr class="items">
-                            <td>{{ $materialProject->nome }}</td>
-                            <td>{{ $materialProject->quantidade }}</td>
-                            <td><a href="{{ route('material.acquisition', ['project' => $project->id, 'material' => $materialProject->id]) }}">Solicitar</a></td>
+                            <td>{{ $material->nome }}</td>
+                            <td><a href=" {{ route('admin.material.project', ['materialId' => $material->id]) }} ">Ver</a></td>
                         </tr>
                     @endforeach
                 </tbody>

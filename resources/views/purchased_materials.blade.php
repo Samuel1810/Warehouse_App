@@ -282,8 +282,8 @@
             <h1>Compras de {{ $material->nome }}</h1>
         </div>
 
-        <div>
-            <a href="{{ route('admin.stock') }}" class="back-button">Voltar</a>
+        <div class="text-left">
+            <a href="{{ route('admin.stock') }}" class="btn btn-danger">Voltar</a>
         </div>
 
         <div class="material-details">

@@ -26,7 +26,7 @@ class Material extends Model
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class, 'material_projects');
+        return $this->belongsToMany(Project::class, 'materials_projects');
     }
 
     public function purchaseMaterials()

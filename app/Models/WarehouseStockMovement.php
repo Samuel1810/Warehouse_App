@@ -14,6 +14,6 @@ class WarehouseStockMovement extends Model
         'project_id',
         'quantity',
         'top',
-        'left',
+        'left'
     ];
 }

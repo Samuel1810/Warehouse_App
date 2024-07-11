@@ -14,6 +14,9 @@ class Movement extends Model
     protected $fillable = [
         'user_id', 
         'material_id', 
+        'project_id',
+        'warehouse_id',
+        'cabinet_id',
         'quantidade',
         'data_movimento',
         'tipo_movimento'

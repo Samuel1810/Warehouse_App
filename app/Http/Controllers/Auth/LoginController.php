@@ -35,9 +35,9 @@ class LoginController extends Controller
         }
         
         if (auth()->user()->user_type === 1) {
-            return redirect()->route('admin.page');
+            return redirect()->route('admin.material');
         } else {
-            return redirect()->route('user.project');
+            return redirect()->route('user.material');
         }
     }
 

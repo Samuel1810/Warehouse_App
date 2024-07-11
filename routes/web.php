@@ -52,44 +52,80 @@ Route::group(['middleware' => 'web'], function () {
     // Rotas autenticadas
     Route::middleware(['auth'])->group(function () {
         // USER ROUTES
+        Route::get('/user-materials', [MaterialController::class, 'showAllMaterials'])
+            ->name('user.material');
 
-        Route::get('/user-projects', [MaterialController::class, 'index'])
-            ->name('user.project');
-
-        Route::get('/user-materials/project/{project}', [MaterialController::class, 'materialProjects'])
-            ->name('user.project.material');
+            Route::get('/user-material/{materialId}/projects', [MaterialController::class, 'showMaterialProjects'])
+                ->name('user.material.project');
 
         // MATERIAL ROUTES
 
-        Route::get('/purchases/material/{material}', [MaterialController::class, 'showHistoricoCompras'])
-            ->name('material.historico-compras');
+        //Barra de Pesquisa
+        Route::get('/materials', [MaterialController::class, 'search'])
+            ->name('dashboard');
 
-        Route::get('/material-acquisition/project/{project}/material/{material}', [MaterialController::class, 'purchases'])
-            ->name('material.acquisition');
+        // Route::post('/material/approve/{material}', 'MaterialController@approve')->name('material.approve');
 
-        Route::post('/material/approve/{material}', 'MaterialController@approve')->name('material.approve');
+        // Route::post('/material/reject/{material}', 'MaterialController@reject')->name('material.reject');
 
-        Route::post('/material/reject/{material}', 'MaterialController@reject')->name('material.reject');
+        Route::get('/material-info/project/{projectId}/material/{materialId}/{warehouseId}/{cabinetId}', [MaterialController::class, 'showMaterial'])
+            ->name('material.show');
 
             // Aquisição
-        Route::post('/acquired-material/project/{project}/material/{material}', [MaterialController::class, 'acquired'])->name('acquired.material');
+            Route::post('/acquire-material/project/{projectId}/material/{materialId}/{warehouseId}/{cabinetId}', [MaterialController::class, 'acquire'])->name('acquire.material');
 
             // Devolução
-        Route::post('/acquired-material/{material}/return', [MaterialController::class, 'returnMaterial'])->name('material.return'); 
+            Route::post('/return-material/project/{projectId}/{materialId}/{warehouseId}/{cabinetId}', [MaterialController::class, 'return'])->name('material.return'); 
+
+            // BuyHistory
+            Route::get('/purchases/material/{material}', [MaterialController::class, 'showHistoricoCompras'])
+            ->name('material.historico-compras');
+
+        //Project Routes
+        Route::get('/projects', [ProjectController::class, 'index'])
+            ->name('admin.manage.project');
+
+        Route::post('/projects/store', [ProjectController::class, 'store'])
+            ->name('admin.store.project');
+
+        Route::get('/project/{projectId}/edit', [ProjectController::class, 'edit'])
+            ->name('admin.edit.project');
+
+        Route::get('/projects/{projectId}/remove', [ProjectController::class, 'remove'])
+            ->name('admin.remove.project');
+
+            //Owners and Members
+            Route::post('/project/owner-update', [ProjectController::class, 'switchOwner'])
+                ->name('project.owner.update');
+
+            Route::post('/project/{projectId}/add-member', [ProjectController::class, 'addMember'])
+                ->name('project.add.member');
+
+            Route::get('/project/{projectId}/remove-member/{userId}', [ProjectController::class, 'removeMember'])
+                ->name('project.remove.member');
+
+            // Materials
+            Route::post('/project/{projectId}/add-material', [ProjectController::class, 'addMaterial'])
+                ->name('project.add.material');
+
+            Route::get('/project/{projectId}/remove-material/{materialId}', [ProjectController::class, 'removeMaterial'])
+                ->name('project.remove.material');
+
 
         // Account Routes
-        Route::get('/myaccount/{user}', [UserController::class, 'myAccount'])   ->name('my.account');
+        Route::get('/myaccount/{user}', [UserController::class, 'myAccount'])   
+            ->name('my.account');
 
             // Password 
         Route::get('/myaccount/update-password/{user}', [UserController::class, 'updatePassword'])
             ->name('password.update');
 
         //ADMIN ROUTES
-        Route::get('/admin-projects', [MaterialController::class, 'index'])
-            ->name('admin.project');
+        Route::get('/admin-materials', [MaterialController::class, 'showAllMaterials'])
+            ->name('admin.material');
 
-        Route::get('/admin-materials/project/{project}', [MaterialController::class, 'materialProjects'])
-            ->name('admin.project.material');
+        Route::get('/admin-material/{materialId}/projects', [MaterialController::class, 'showMaterialProjects'])
+            ->name('admin.material.project');
 
         Route::get('/admin-page', function(){
             $users = User::where('user_type', 0)->get();
@@ -137,16 +173,16 @@ Route::group(['middleware' => 'web'], function () {
         ->name('admin.warehouses.remove');
 
             //CABINETS
-        Route::get('/warehouses/{warehouse}/shelves/edit', [CabinetController::class, 'edit'])
+        Route::get('/warehouses/{warehouse}/cabinets/edit', [CabinetController::class, 'edit'])
             ->name('admin.cabinets.edit');
 
-        Route::get('/warehouses/{warehouse}/shelves/remove', [CabinetController::class, 'remove'])
+        Route::get('/warehouses/{warehouse}/cabinets/remove', [CabinetController::class, 'remove'])
             ->name('admin.cabinets.remove');
 
-        Route::get('warehouses/{warehouse}/shelves/create',[CabinetController::class, 'create'])
+        Route::get('warehouses/{warehouse}/cabinets/create',[CabinetController::class, 'create'])
             ->name('admin.cabinets.create');
 
-        Route::post('warehouses/{warehouse}/shelves/store', [CabinetController::class, 'store'])
+        Route::post('warehouses/{warehouse}/cabinets/store', [CabinetController::class, 'store'])
             ->name('admin.cabinets.store');
 
             //STOCK FILL
@@ -160,12 +196,6 @@ Route::group(['middleware' => 'web'], function () {
         Route::post('/update-location/warehouse/{warehouse}', [WarehouseController::class, 'updateLocation'])
             ->name('admin.update.warehouse');
 
-        Route::get('/projects', [ProjectController::class, 'index'])
-            ->name('admin.manage.project');
-
-        Route::get('/project/{projectId}/edit', [ProjectController::class, 'edit'])
-            ->name('admin.edit.project');
-        
         //EMAIL ROUTES
         Route::get('/material/movement/reject/{material}/{movementId}/{token}', [MaterialController::class,'showRejectionForm'])->name('material.movement.reject.form');
 

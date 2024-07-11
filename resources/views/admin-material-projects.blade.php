@@ -17,6 +17,10 @@
     }
 
     h1 a{
+        color: #fff;
+    }
+
+    h1 a:hover{
         text-decoration: none;
         color: #fff;
     }
@@ -232,7 +236,7 @@
 </style>    
 
 <title>
-    Projetos - {{ auth()->user()->name }}
+    {{ $material->nome }}
 </title>
 
 <body>
@@ -248,7 +252,7 @@
                     </div>
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
-                        <a href="{{ route('admin.stock') }}">Stock</a>
+                        <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
                         <a href="{{ route('admin.manage.project') }}">Projetos</a>
                         <a href="{{ route('admin.warehouses.index' ) }}" >Gestão de Armazéns</a>
                     </div>
@@ -259,11 +263,11 @@
     </div>
     <div class="container">
         <div class="page-title">
-            <h1>Projetos de {{ auth()->user()->name }}</h1>
+            <h1>{{ $material->nome }}</h1>
         </div>
 
-        <div class="button-container">
-            <a href=" {{ route('admin.page') }} " class="btn btn-primary">Gestão de Utilizadores</a>
+        <div class="text-left">
+            <a href=" {{ route('admin.material') }} " class="btn btn-danger">Voltar</a>
         </div>
 
         <!-- search bar -->
@@ -276,36 +280,27 @@
         </form> -->
 
 
-        <div class="user-table">
-            <table>
+        <div>
+            <table class="user-table">
             <thead>
                     <tr>
-                        <th>Número do Projeto</th>
-                        <th>Descrição</th>
-                        <th>Ver Materiais</th>
+                        <th>Projeto</th>
+                        <th>Armazém</th>
+                        <th>Estante</th>
+                        <th>Quantidade (em kg)</th>
+                        <th>Requisitar</th>
                     </tr>
                 </thead>
                 <tbody>
-                @foreach ($ownerProjects as $ownerProject)
+                    @foreach ($materialsProjects as $project)
                         <tr class="items">
-                            <td>{{ $ownerProject->id }} (Dono)</td>
+                            <td>{{ $project->project_id }}</td>
+                            <td>{{ $project->warehouse_id }}</td>
+                            <td>{{ $project->cabinet_id }}</td>
+                            <td>{{ $project->quantidade }}</td>
                             <td>
-                                <p>
-                                    Descrição....
-                                </p>
+                            <a href="{{ route('material.show', ['projectId' => $project->project_id, 'materialId' => $material->id, 'warehouseId' => $project->warehouse_id, 'cabinetId' => $project->cabinet_id]) }}">Ver mais</a>
                             </td>
-                            <td><a href="{{ route('admin.project.material', ['project' => $ownerProject->id]) }}">Ver</a></td>
-                        </tr>
-                    @endforeach
-                    @foreach ($userProjects as $project)
-                        <tr class="items">
-                            <td>{{ $project->project_id }} (Membro)</td>
-                            <td>
-                                <p>
-                                    Descrição....
-                                </p>
-                            </td>
-                            <td><a href="{{ route('admin.project.material', ['project' => $project->project_id]) }}">Ver</a></td>
                         </tr>
                     @endforeach
                 </tbody>

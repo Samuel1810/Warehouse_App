@@ -7,6 +7,7 @@
             $(".dropdown-content").toggle();
         });
     });
+
 </script>
 
 <style>
@@ -17,6 +18,10 @@
     }
 
     h1 a{
+        color: #fff;
+    }
+
+    h1 a:hover{
         text-decoration: none;
         color: #fff;
     }
@@ -299,6 +304,11 @@
         font-size: 18px;
     }
 
+    .movements-table tr.hidden {
+        display: none;
+    }
+
+
 </style>    
 
 <title>
@@ -319,9 +329,10 @@
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
                         @if(auth()->user()->isAdmin())
+                            <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
+                            <a href="{{ route('admin.manage.project') }}">Projetos</a>
                             <a href="{{ route('admin.warehouses.index' ) }}">Gestão de Armazéns</a>
                         @endif
-                        <a href="{{ route('admin.stock') }}">Stock</a>
                     </div>
                 </div>
                 <a class="log-out" href="{{ route('login.destroy') }}">LogOut</a>
@@ -331,10 +342,6 @@
     <div class="container">
         <div class="page-title">
             <h1>Detalhes - Conta Pessoal</h1>
-        </div>
-
-        <div class="button-container">
-            <a onclick="javascript:history.go(-1)" class="btn btn-primary">Voltar</a>
         </div>
 
         <div class="user-title">
@@ -367,10 +374,7 @@
                 </tr>
             </thead>
             <tbody>
-                @php $count = 0; @endphp
                 @foreach ($movements as $movement)
-                    @php $count++; @endphp
-                    @if ($count <= 5)
                         <tr>
                             <td> 
                                 <strong>
@@ -392,12 +396,7 @@
                                 </strong>
                             </td>
                         </tr>
-                    @endif
                 @endforeach
         </tbody>
     </table>
-
-    @if ($user->movements->count() >= 5)
-        <a class="btn-more" href="">Ver Mais</a>
-    @endif
 </div>

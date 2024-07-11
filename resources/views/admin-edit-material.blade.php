@@ -258,8 +258,8 @@
             <div class="page-title">
                 <h1>Corrigir Estoque de {{ $material->nome }}</h1>
             </div>
-            <div>
-                <a href="{{ route('admin.stock') }}" class="back-button">Voltar</a>
+            <div class="text-left">
+                <a href="{{ route('admin.stock') }}" class="btn btn-danger">Voltar</a>
             </div>
 
             <form action="{{ route('admin.stock.update', ['material' => $material->id]) }}" method="POST">
@@ -279,7 +279,7 @@
                     <div class="fix-movement">
                         <h2 id="tipo-quantidade">Escolha o tipo da correção</h2>
                         <input class="quantity-input" type="number" name="quantidade" id="quantidade" min="0" step="0.1">
-                        <button class="fix-button" type="submit">Salvar</button> 
+                        <button onclick="return confirm('Tem certeza que deseja realizar essa operação?')" class="fix-button" type="submit">Salvar</button> 
                     </div>
 
                 </div>

@@ -34,8 +34,8 @@ class WarehouseController extends Controller
         $newWarehouse = new Warehouse();
         $newWarehouse->id = $newWarehouseNumber;
 
-        $newWarehouse->top = 85;
-        $newWarehouse->left = 10;
+        // $newWarehouse->top = 85;
+        // $newWarehouse->left = 10;
 
         $request->validate([
             'layout' => 'required|mimes:png,jpg,jpeg',

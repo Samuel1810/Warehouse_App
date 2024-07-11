@@ -8,6 +8,10 @@
     }
 
     h1 a{
+        color: #fff;
+    }
+
+    h1 a:hover{
         text-decoration: none;
         color: #fff;
     }
@@ -191,8 +195,9 @@
                     </div>
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
-                        <a href="{{ route('admin.warehouses.index' ) }}">Gestão de Armazéns</a>
-                        <a href="{{ route('admin.stock') }}">Stock</a>
+                        <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
+                        <a href="{{ route('admin.manage.project') }}">Projetos</a>
+                        <a href="{{ route('admin.warehouses.index' ) }}" >Gestão de Armazéns</a>
                     </div>
                 </div>
                 <a class="log-out" href="{{ route('login.destroy') }}">LogOut</a>
@@ -205,7 +210,7 @@
         </div>
         <br>
         <div class="button-container"> 
-            <a href=" {{ route('admin.project') }} " class="btn btn-primary">Meus Projetos</a>
+            <a href=" {{ route('admin.material') }} " class="btn btn-primary">Materiais</a>
         </div>
 
         <div class="user-table">

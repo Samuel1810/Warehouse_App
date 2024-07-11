@@ -11,7 +11,7 @@
 
 <style>
     body {
-        font-family: Arial, buns-serif;
+        font-family: Arial, sans-serif;
         background-color: #f2f2f2;
         margin: 0;
     }
@@ -31,7 +31,7 @@
     }
 
     .page-title {
-        background-color: black;
+        background-color: #007bff;
         color: #fff;
         padding: 10px;
         border-radius: 5px;
@@ -45,11 +45,11 @@
     .button-container {
         margin-top: 20px;
         margin-bottom: 20px;
-        margin-right: 1090px;
+        margin-right: 1050px;
     } 
 
-    .btn {
-        background-color: black;
+    .button {
+        background-color: #009bff;
         color: #fff;
         border: none;
         border-radius: 5px;
@@ -58,8 +58,8 @@
         font-weight: bold;
     }
 
-    .btn:hover {
-        background-color: gray;
+    .button:hover {
+        background-color: #0056b3;
     }
 
     .user-table {
@@ -81,8 +81,13 @@
     }
 
     .user-table th {
-        background-color: black;
+        background-color: #007bff;
         color: #fff;
+        padding-left: 112px;
+    }
+
+    .user-table td {
+        padding-left: 112px;
     }
 
     .user-table a {
@@ -179,16 +184,65 @@
     .user-info .log-out:hover {
         color: #EA564D;
     }
-</style>
+
+    .search-bar {
+        display: flex;
+        margin-bottom: 20px;
+    }
+
+    .input-container {
+        flex: 1;
+        margin-right: 10px;
+        margin-bottom: 10px;
+    }
+
+    .input {
+        width: 40%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .btn-search,
+    .btn-clear {
+        background-color: #009bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        text-decoration: none;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .btn-search {
+        height: 40px;
+        font-size: 17px;
+    }
+
+    .btn-search:hover,
+    .btn-clear:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-clear {
+        background-color: #ccc;
+        margin-left: 0;
+    }
+
+    .btn-clear:hover {
+        background-color: #999;
+    }
+</style>    
 
 <title>
-    Página do Gestor
+    Projetos - {{ $material->nome }}
 </title>
 
 <body>
     @section('content')
     <div class="header">
-        <h1><a href="{{ route('admin.page') }}">Armazém do Minho</a></h1>
+        <h1><a href="{{ route('user.material') }}">Armazém do Minho</a></h1>
         <div class="user-info">
             @if (auth()->check())
                 <div class="user-dropdown">
@@ -198,9 +252,6 @@
                     </div>
                     <div class="dropdown-content">
                         <a href="{{ route('my.account', ['user' => auth()->user()->id]) }}">Minha Conta</a>
-                        <a href="{{ route('admin.stock') }}">Pré-Armazém</a>
-                        <a href="{{ route('admin.manage.project') }}">Projetos</a>
-                        <a href="{{ route('admin.warehouses.index' ) }}" >Gestão de Armazéns</a>
                     </div>
                 </div>
                 <a class="log-out" href="{{ route('login.destroy') }}">LogOut</a>
@@ -209,32 +260,48 @@
     </div>
     <div class="container">
         <div class="page-title">
-            <h1>Pré-Armazém</h1>
+            <h1>Projetos - {{ $material->nome }}</h1>
         </div>
 
+        <div class="text-left">
+            <a href=" {{ route('user.material') }} " class="btn btn-danger">Voltar</a>
+        </div>
+
+        <!-- search bar -->
+        <!-- <form method="GET" action="" class="mb-4 flex items-center space-x-2">
+            <div class="input-container">
+                <input type="text" name="material" placeholder="Pesquisar..." value="{{ request('material') }}" class="input">
+                <button type="submit" class="btn-search">Pesquisar</button>
+                <a href="" class="btn-clear">Limpar</a>
+            </div>
+        </form> -->
+
+
         <div class="user-table">
-            <h2 class="text-h2">Materiais</h2>
             <table>
-                <thead>
+            <thead>
                     <tr>
-                        <th>Nome</th>
-                        <th>Quantidade (KG)</th>
-                        <th>Corrigir Stock</th>
-                        <th>Compras</th>
+                        <th>Projeto</th>
+                        <th>Quantidade (em kg)</th>
+                        <th>Requisitar</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($materials as $material)
+                    @foreach ($materialsProjects as $project)
                         <tr class="items">
-                            <td>{{ $material->nome }}</td>
-                            <td>{{ $material->quantidade }}</td>
-                            <td><a href="{{ route('admin.stock.edit' , ['material' => $material->id]) }}">Corrigir</a></td>
-                            <td><a href="{{ route('material.historico-compras', ['material' => $material->id]) }}">Ver mais</a></td>
+                            <td>{{ $project->id }}</td>
+                            <td>
+                                {{ $project->quantity }}
+                            </td>
+                            <td>
+                            <a href="{{ route('material.acquisition', ['project' => $project->id, 'materialId' => $material->id]) }}">Ver mais</a>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
-            </table>
+            </table>    
         </div>
     </div>
+    @endsection
 </body>
 </html>
